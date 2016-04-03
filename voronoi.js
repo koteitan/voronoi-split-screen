@@ -4,65 +4,107 @@ voronoi.js
 ------------------------------*/
 
 /* function of Voronoi split
-  bb = bounding box bb
-  ks = number of kernels(=k.length)
-  k[k][d]    = kernel.
+  this.sbb[s].b   = vertices of screen bounding box
+  this.sbb[s].pki = pertner kernel list of screen bounding box
+  this.k[k][d]    = kernel.
    k = kernel index
    d = dimension index
-  b[k][v][d] = boundary vertices. 
+  this.b[k][v][d] = list of vertices of boundary polygon. 
     k = kernel index
     v = vertex index of the boundary polygon
     d = dimension index
-  pki[k][v]  = pertner kernel index that 
+  this.pki[k][v]  = pertner kernel index that 
                makes a boundary b[k][v]--b[k][v+1] with kernel k[k].
 */
-var Voronoi = function(bb){
-  this.bb = bb;
+var Voronoi = function(sbb){
+  this.sbb.b   = sbb;
+  this.sbb.pki = [];
+  this.k   = [];
+  this.b   = [];
+  this.pki = [];
 }
 
 /* addVoronoi(v,q) = add point q[d] or all points in the list q[d][p]. */
 var Voronoi.prototype.add = function(q){
   if(q[0] instanceof Array){
     // q is not a list
-    if(this.kernel.length>0){
+    if(this.k.length>0){
       // not empty
-      var nki = nearest2d(this.kernel, q); // nearest kernel from q 
-      var nk  = this.k[nki];
-      // m + s*nd = bisection
-      var m = [(q[0]+[0])/2,(q[1]+nk[1])/2];
-      var nd = [-(nk[1]-q[1]),+(nk[0]-q[0])];
-      // search nearest crosspoint between bisection and b[nki] from m
-      var npv = 0;
-      var nps = +Infinity;
-      var nmv = 0;
-      var nms = -Infinity;
-      var nkb = this.b[nki];
-      var vs = this.b[nki].length;
-      for(var v=0;v<vs;v++){
-        var nkbv0 = nkb[v];
-        var nkbv1 = nkb[(v+1)%vs];
-        var nkbvd = [nkbv1[0]-nkbv0[0],nkbv1[1]-nkbv0[1]];
-        var s = crosspoint2d_s(m,nd,nkbv0,nkbvd);
-        if(s > 0){
-          if(abss < nsp){
-            nps = s;
-            npv = v;
+      
+      var newk = q; // new kernel is q.
+      var nki  = nearest2d(this.kernel, q); // nearest kernel from q 
+      var pki  = nki; // pivot kernel
+      var newb   = [];
+      var newpki = [];
+      do{
+        var pk   = this.k[pki];
+        
+        // m + s*nd = bisection
+        var m = [(q[0]+[0])/2,(q[1]+pk[1])/2];
+        var nd = [-(pk[1]-q[1]),+(pk[0]-q[0])];
+        // search nearest crosspoint between bisection and b[pki] from m
+        var npk = -1;
+        var nps = +Infinity;
+        var nmk = -1;
+        var nms = -Infinity;
+        var pkb = this.b[pki];
+        var vs = pkb.length;
+        for(var v=0;v<vs;v++){
+          var pkbv0 = pkb[v];
+          var pkbv1 = pkb[(v+1)%vs];
+          var pkbvd = [pkbv1[0]-pkbv0[0],pkbv1[1]-pkbv0[1]];
+          var s = crosspoint2d_s(m,nd,pkbv0,pkbvd);
+          if(s > 0){
+            if(abss < nsp){
+              nps = s;
+              npe = v;
+            }
+          }else{ // s<=0
+            if(abss > nsm){
+              nms = s;
+              nme = v;
+            }
           }
-        }else{ // s<=0
-          if(abss > nsm){
-            nms = s;
-            nmv = v;
+        }//for v
+        /* here is:
+          nps = nearest potitive s:
+           that gains nearest crosspoint 
+           between bisection and boundary of pki in s>0.
+          nms = nearest negative s:
+           that gains nearest crosspoint 
+           between bisection and boundary of pki in s<=0.
+          npe = edge for nps.
+          nme = edge for nms.
+        */
+        if(newb.length==0){
+          // newb   = new boundaries of pk and q = nearest crosspoints.
+          oldb   = [m[0]+nms*nd[0],m[1]+nms*nd[1]]; 
+          newb   = [m[0]+nps*nd[0],m[1]+nps*nd[1]];
+          if(npe<0){
+            //if npe is not screen bounding box:
+            this.pki[k][nme]
+          }else{
+            //if npe is screen bounding box:
+            //then skip and add q into sbb[bbi]
+            var bbi = (-npe)-1;
+            pki = (this.sbb[bbi].pki.indexOf(pki)+1)%this.sbb[bbi].pki.length;
+          }
+          break;
+        }else{
+          newb  .push(m[0]+nps*nd[0],m[1]+nps*nd[1]);
+          newpki.push(this.plo[k][npv]);
+          if(this.pki[k][npv]==nki){
+            //when back to nearest kernel:
+            break;
           }
         }
-        // under construction
-      }
+      }while(1);
     }else{
       // first add
-      this.k = [q];
-      this.b = [ //k=0
-        [ bb[0][0], bb[0][1], bb[1][1], bb[1][0] ] //v=0
-      ];
-      this.pki = [ [-1,-2,-3,-4] ];
+      this.k      .push(q            );
+      this.b      .push(sbb          );
+      this.pki    .push([-1,-2,-3,-4]);
+      this.sbb.pki.push([ 0, 0, 0, 0]);
     }
   }else{
     // q is list of multiple points
