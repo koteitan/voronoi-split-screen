@@ -13,17 +13,8 @@ var procAll=function(){ //main loop
   procEvent();
 }
 window.onresize = function(){
-  var agent = navigator.userAgent;
-  if( agent.search(/iPhone/) != -1 || agent.search(/iPod/) != -1 || agent.search(/iPad/) != -1){
-    wx = 512;
-    wy = 512;
-  }else{
-    var newWidth  = [document.documentElement.clientWidth-300, 320].max();
-    var newHeight = [(document.documentElement.clientHeight-160)*0.9, 180].max();
-    var newSize = [newWidth, newHeight].min();
-    wx = newSize;
-    wy = newSize;
-  }
+  wx = 512;
+  wy = 512;
   document.getElementById("canvas0").width = wx;
   document.getElementById("canvas0").height= wy;
   isRequestedDraw = true;
@@ -70,7 +61,7 @@ var initDraw=function(){
 var procDraw=function(){
   //clear ---------
   //draw ball
-  if(p[2]>=0){
+  if(0){
     ctx[0].fillStyle = 'rgb(255,255,255)'; //white
     ctx[0].beginPath();
     ctx[0].arc(p[0], p[1], p[2]*Rnowpos, 0, Math.PI*2, false);
