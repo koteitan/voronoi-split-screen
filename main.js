@@ -13,18 +13,21 @@ var procAll=function(){ //main loop
   procEvent();
 }
 window.onresize = function(){
-  wx = 512;
-  wy = 512;
-  document.getElementById("canvas0").width = wx;
-  document.getElementById("canvas0").height= wy;
+  document.getElementById("canvas0").width = 512;
+  document.getElementById("canvas0").height= 512;
   isRequestedDraw = true;
 };
 //fields for game ---------------------------
+var players=5;
+var q = new Array(players); // q[p][] = [x,y] = 2D position for player p
+for(var p=0;p<players;p++) q[p]=new Array(2);
+var ww = [[0,0],[1,1]]; // world rectangle
 //fields for graphic ------------------------
+var sw = [[0,0],[512,512]]; // screen rectangle
 var canvases  = 1;
 var frameRate = 60; // [fps]
-var canvas = new Array(2);
-var ctx    = new Array(2);
+var canvas = new Array(canvases);
+var ctx    = new Array(canvases);
 var isRequestedDraw;
 //field for event--------------------
 var isKeyTyping;
@@ -43,6 +46,9 @@ var initEvent = function(){
 };
 //initialize game----------------------------
 var initGame=function(){
+  for(var p=0;p<players;p++){
+    for(var d=0;d<2;d++) q[p][d]=Math.random();
+  }
 };
 var resetGame=function(){
   initGame();
